@@ -1,59 +1,46 @@
-const { Model, DataTypes } = require('sequelize');
-const sequelize = require('../config/connection');
-const bcrypt = require('bcrypt');
-
-// create User model
-class User extends Model {
-  // set up method to run on instance data (per user) to check password 
-  checkPassword(loginPW) {
-    return bcrypt.compareSync(loginPW, this.password);
-  }
-}
+const { Schema, model } = require("mongoose");
 
 // define table columns and configuration
-User.init(
+const userSchema = new Schema(
   {
-    // define an id column
-    id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      primaryKey: true,
-      autoIncrement: true
-    },
     // define a username column
     username: {
-      type: DataTypes.STRING,
+      type: String,
       allowNull: false,
-      unique: true
+      unique: true,
+      trim: true,
     },
-    // define a password column 
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        // this means the password must be at least four characters long
-        len: [4]
-      }
-    }
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      match: [/\w+@\w+(\.\w{2,3})+/, "Invalid email address"],
+    },
+    // define a thoughts collumn
+    thoughts: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "thought",
+      },
+    ],
+    friends: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "user",
+      },
+    ],
   },
   {
-    hooks: {
-      async beforeCreate(newUserData) {
-        newUserData.password = await bcrypt.hash(newUserData.password, 10);
-        return newUserData;
-
-      },
-      async beforeUpdate(updatedUserData) {
-        updatedUserData.password = await bcrypt.hash(updatedUserData.password, 10);
-        return updatedUserData;
-      }
+    toJSON: {
+      virtuals: true,
     },
-    sequelize,
-    timestamps: false,
-    freezeTableName: true,
-    underscored: true,
-    modelName: 'user'
   }
 );
+
+userSchema.virtual("friendCount").get(function () {
+  return this.friends.length
+})
+
+const User = model("user", userSchema);
 
 module.exports = User;
