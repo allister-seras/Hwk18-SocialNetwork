@@ -3,7 +3,7 @@ const { User, Thought } = require("../models");
 module.exports = {
   // Get all thought
   getAllThoughts(req, res) {
-    Course.find()
+    Thought.find()
       .then((thoughts) => res.json(thoughts))
       .catch((err) => res.status(500).json(err));
   },
@@ -57,32 +57,59 @@ module.exports = {
       .then(course)
       .catch((err) => res.status(500).json(err));
   },
-  // Create a reaction
-  async createReaction(req, res) {
-    try {
-      const { thoughtId, reactionId } = req.params;
-      const updatedThought = Thought.findOneAndUpdate(
-        { _id: thoughtId },
-        { $push: { reactions: { _id: reactionId } } },
-        { new: true }
-      );
-      res.json(updatedThought);
-    } catch (err) {
-      res.status(500).json(err);
+// Create a reaction
+async createReaction(req, res) {
+  try {
+    const { thoughtId } = req.params;
+    const { reactionBody, username } = req.body; // Assuming you have these fields in the request body
+    
+    const updatedThought = await Thought.findOneAndUpdate(
+      { _id: thoughtId },
+      {
+        $push: {
+          reactions: {
+            reactionBody,
+            username,
+          },
+        },
+      },
+      { new: true }
+    );
+
+    if (!updatedThought) {
+      return res.status(404).json({ message: 'Thought not found' });
     }
-  },
-  // Delete a reaction
-  deleteReaction(req, res) {
-    try {
-      const { thoughtId, reactionId } = req.params;
-      const updatedThought = Thought.findOneAndUpdate(
-        { _id: thoughtId },
-        { $pull: { reactions: { _id: reactionId } } },
-        { new: true }
-      );
-      res.json(updatedThought);
-    } catch (err) {
-      res.status(500).json(err);
-    }
+
+    res.json(updatedThought);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json(err);
   }
+},
+// Delete a reaction
+async deleteReaction(req, res) {
+  try {
+    const { thoughtId, reactionId } = req.params;
+
+    const updatedThought = await Thought.findOneAndUpdate(
+      { _id: thoughtId },
+      {
+        $pull: {
+          reactions: { _id: reactionId },
+        },
+      },
+      { new: true }
+    );
+
+    if (!updatedThought) {
+      return res.status(404).json({ message: 'Thought not found' });
+    }
+
+    res.json(updatedThought);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json(err);
+  }
+}
+
 };
