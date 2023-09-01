@@ -2,107 +2,70 @@ const { ObjectId } = require('mongoose').Types;
 const { User, Thought } = require('../models');
 
 module.exports = {
-  // Get all students
+  // Get all users
   getAllUsers(req, res) {
-    Student.find()
-      .then(async (students) => {
-        const studentObj = {
-          students,
-          headCount: await headCount(),
-        };
-        return res.json(studentObj);
+    User.find().populate("thoughts").populate("friends")
+      .then((users) => {
+        return res.json(users);
       })
       .catch((err) => {
         console.log(err);
         return res.status(500).json(err);
       });
   },
-  // Get a single student
+  // Get a single user
   getUser(req, res) {
-    Student.findOne({ _id: req.params.studentId })
+    User.findOne({ _id: req.params.userId })
       .select('-__v')
-      .then(async (student) =>
-        !student
-          ? res.status(404).json({ message: 'No student with that ID' })
-          : res.json({
-              student,
-              grade: await grade(req.params.studentId),
-            })
-      )
+      .then((user) => {
+        return res.json(user);
+      })
       .catch((err) => {
         console.log(err);
         return res.status(500).json(err);
       });
   },
-  // create a new student
+  // create a new user
   createUser(req, res) {
-    Student.create(req.body)
-      .then((student) => res.json(student))
+    User.create(req.body)
+      .then((user) => res.json(user))
       .catch((err) => res.status(500).json(err));
   },
   // update user
   updateUser(req, res) {
-    Student.create(req.body)
-      .then((student) => res.json(student))
+    User.findOneAndUpdate({ _id: req.params.userId }, {$set: req.body}, {new: true})
+      .then((user) => res.json(user))
       .catch((err) => res.status(500).json(err));
   },
-  // Delete a student and remove them from the course
+  // Delete a user and remove them from the database
   deleteUser(req, res) {
-    Student.findOneAndRemove({ _id: req.params.studentId })
-      .then((student) =>
-        !student
-          ? res.status(404).json({ message: 'No such student exists' })
-          : Course.findOneAndUpdate(
-              { students: req.params.studentId },
-              { $pull: { students: req.params.studentId } },
-              { new: true }
-            )
-      )
-      .then((course) =>
-        !course
-          ? res.status(404).json({
-              message: 'Student deleted, but no courses found',
-            })
-          : res.json({ message: 'Student successfully deleted' })
-      )
-      .catch((err) => {
-        console.log(err);
-        res.status(500).json(err);
-      });
+    User.findOneAndRemove({ _id: req.params.userId })
+      .then((user) => res.json(user))
+      .catch((err) => res.status(500).json(err));
   },
 
-  // Add an assignment to a student
+  // Add a friend to a user
   addFriend(req, res) {
-    console.log('You are adding an assignment');
+    console.log('You are adding a friend');
     console.log(req.body);
-    Student.findOneAndUpdate(
-      { _id: req.params.studentId },
-      { $addToSet: { assignments: req.body } },
+    User.findOneAndUpdate(
+      { _id: req.params.userId },
+      { $addToSet: { friends: req.params.friendId } },
       { runValidators: true, new: true }
     )
-      .then((student) =>
-        !student
-          ? res
-              .status(404)
-              .json({ message: 'No student found with that ID :(' })
-          : res.json(student)
-      )
-      .catch((err) => res.status(500).json(err));
-  },
-  // Remove assignment from a student
+    .then((user) => res.json(user))
+    .catch((err) => res.status(500).json(err));
+},
+  // Remove a friend to a user
   removeFriend(req, res) {
-    Student.findOneAndUpdate(
-      { _id: req.params.studentId },
-      { $pull: { assignment: { assignmentId: req.params.assignmentId } } },
+    console.log('You are removing a friend');
+    console.log(req.body);
+    User.findOneAndreUpdate(
+      { _id: req.params.userId },
+      { $pull: { friends: req.params.friendId } },
       { runValidators: true, new: true }
     )
-      .then((student) =>
-        !student
-          ? res
-              .status(404)
-              .json({ message: 'No student found with that ID :(' })
-          : res.json(student)
-      )
-      .catch((err) => res.status(500).json(err));
+    .then((user) => res.json(user))
+    .catch((err) => res.status(500).json(err));
   },
 };

@@ -1,75 +1,88 @@
-const { User, Thought } = require('../models');
+const { User, Thought } = require("../models");
 
 module.exports = {
   // Get all thought
   getAllThoughts(req, res) {
     Course.find()
-      .then((courses) => res.json(courses))
+      .then((thoughts) => res.json(thoughts))
       .catch((err) => res.status(500).json(err));
   },
   // Get a thought
   getThought(req, res) {
-    Course.findOne({ _id: req.params.courseId })
-      .select('-__v')
-      .then((course) =>
-        !course
-          ? res.status(404).json({ message: 'No course with that ID' })
-          : res.json(course)
-      )
+    Thought.findOne({ _id: req.params.thoughtId })
+      .select("-__v")
+      .then((thoughts) => res.json(thoughts))
       .catch((err) => res.status(500).json(err));
   },
   // Create a thought
-  createThought(req, res) {
-    Course.create(req.body)
-      .then((course) => res.json(course))
-      .catch((err) => {
-        console.log(err);
-        return res.status(500).json(err);
-      });
+  async createThought(req, res) {
+    try {
+      const newThought = await Thought.create(req.body);
+      if (newThought) {
+        await User.findOneAndUpdate(
+          { _id: req.body.userId },
+          { $addToSet: { thoughts: newThought._id } },
+          { new: true }
+        );
+      }
+      res.json("Thought created.");
+    } catch (err) {
+      res.status(500).json(err);
+    }
   },
+
   // Delete a thought
-  deleteThought(req, res) {
-    Course.findOneAndDelete({ _id: req.params.courseId })
-      .then((course) =>
-        !course
-          ? res.status(404).json({ message: 'No course with that ID' })
-          : Student.deleteMany({ _id: { $in: course.students } })
-      )
-      .then(() => res.json({ message: 'Course and students deleted!' }))
-      .catch((err) => res.status(500).json(err));
+  async deleteThought(req, res) {
+    try {
+      const newThought = await Thought.create(req.body);
+      if (newThought) {
+        await User.findOneAndUpdate(
+          { _id: req.body.userId },
+          { $addToSet: { thoughts: newThought._id } },
+          { new: true }
+        );
+      }
+      res.json("Thought created.");
+    } catch (err) {
+      res.status(500).json(err);
+    }
   },
   // Update a thought
   updateThought(req, res) {
-    Course.findOneAndUpdate(
-      { _id: req.params.courseId },
+    Thought.findOneAndUpdate(
+      { _id: req.params.thoughtId },
       { $set: req.body },
       { runValidators: true, new: true }
     )
-      .then((course) =>
-        !course
-          ? res.status(404).json({ message: 'No course with this id!' })
-          : res.json(course)
-      )
+      .then(course)
       .catch((err) => res.status(500).json(err));
   },
-    // Create a reaction
-    createReaction(req, res) {
-      Course.create(req.body)
-        .then((course) => res.json(course))
-        .catch((err) => {
-          console.log(err);
-          return res.status(500).json(err);
-        });
-    },
-    // Delete a reaction
-    deleteReaction(req, res) {
-      Course.findOneAndDelete({ _id: req.params.courseId })
-        .then((course) =>
-          !course
-            ? res.status(404).json({ message: 'No course with that ID' })
-            : Student.deleteMany({ _id: { $in: course.students } })
-        )
-        .then(() => res.json({ message: 'Course and students deleted!' }))
-        .catch((err) => res.status(500).json(err));
-    },
+  // Create a reaction
+  async createReaction(req, res) {
+    try {
+      const { thoughtId, reactionId } = req.params;
+      const updatedThought = Thought.findOneAndUpdate(
+        { _id: thoughtId },
+        { $push: { reactions: { _id: reactionId } } },
+        { new: true }
+      );
+      res.json(updatedThought);
+    } catch (err) {
+      res.status(500).json(err);
+    }
+  },
+  // Delete a reaction
+  deleteReaction(req, res) {
+    try {
+      const { thoughtId, reactionId } = req.params;
+      const updatedThought = Thought.findOneAndUpdate(
+        { _id: thoughtId },
+        { $pull: { reactions: { _id: reactionId } } },
+        { new: true }
+      );
+      res.json(updatedThought);
+    } catch (err) {
+      res.status(500).json(err);
+    }
+  }
 };
