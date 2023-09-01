@@ -19,6 +19,5 @@ As this program is a back-end database, the repository needs to be downloaded an
 This project is licensed with ISC.
 
 ## Demo
-A demonstration video of this program can be found here: [[Google link to demo video](https://drive.google.com/file/d/1mnC_U9Agj-sKUYQric7IEdgkd1tEKVXh/view)https://drive.google.com/file/d/1mnC_U9Agj-sKUYQric7IEdgkd1tEKVXh/view ](https://drive.google.com/file/d/1sY_UAsNeosWcIeP_eWtiUtXcUvYqVxF9/view)https://drive.google.com/file/d/1sY_UAsNeosWcIeP_eWtiUtXcUvYqVxF9/view
-
+A demonstration video of this program can be found here: https://drive.google.com/file/d/1sY_UAsNeosWcIeP_eWtiUtXcUvYqVxF9/view
   
